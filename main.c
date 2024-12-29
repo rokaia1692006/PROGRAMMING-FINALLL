@@ -6,8 +6,11 @@
 #include "reservation.h"
 #include"FINAL.c"
 #include "FUNCNAME.h"
+void checkin (){
+
+}
 int main(){
   //getchar();
-  MainMenu();
-  //firstmenuLogin();
+  //MainMenu();
+  firstmenuLogin();
 }
