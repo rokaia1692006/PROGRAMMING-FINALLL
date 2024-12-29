@@ -39,7 +39,7 @@ void MainMenu() {
                 reserve();
                 break;
             case 2:
-                //checkInGuest();
+                checkInGuest();
                 break;
             case 3:
                 CancelReservation();
@@ -188,7 +188,7 @@ enterData(customer);
 printReservation(customer);
 //check if data is correct
 printf("is the data correct if no u will be prompted to enter the data again \n");
-printf("yes/no/return to menu/exit program(y/n/m/e)");
+printf("yes/no/exit (y/n/e)");
 char choice;
 scanf(" %c",&choice);
 // try again
@@ -201,14 +201,12 @@ else if (choice == 'y'){
     printf("GREAT!\n");
     break;
 }
-if (choice == 'm'){
-    return;
-}
-if(choice == 'e'){
+else if(choice == 'e'){
     exit(1);
+
 }
 else{
-    printf("please choose y/n/m/e");
+    printf("please choose y/n/e");
 }
 }
 //open room
@@ -312,84 +310,91 @@ menuOrExit();
 }
 
 //******check in */
-/* void checkInGuest() {
-    FILE* fptr = fopen("Reservation.txt","r");
-    if(fptr == NULL){
+ void checkInGuest() {
+     char c;
+    FILE *res = fopen("Reservation.txt","r"); //reservation
+    if (res == NULL) {
         printf("Could not open file\n");
         return;
         }
-        int numReservations = countlines(fptr);
-    reservation *reservations = malloc(numReservations*sizeof(reservation));
+    int lines = countlines(res); //lines in reservation
+    fclose(res);
     
-    load(reservations);
-    fclose(fptr);
-
-
-        fptr = fopen("Room.txt","r");
-    if(fptr == NULL){
-        printf("Could not open file\n");
-        return;
+    reservation *all = malloc(lines*sizeof(reservation)); //all people
+    load(all);
+  
+    int f = findRoom_NumorID(all,lines);
+    if(f == -1){
+        menuOrExit;
         }
-        int numRooms = countlines(fptr);
-    Room *rooms = malloc(numRooms*sizeof(rooms));
-    
-    LoadRooms(fptr,rooms);
-    fclose(fptr);
-   
-      //char reservationID [7];
-      int i ;
-      while(1){
-       i = findRoom_NumorID(reservations,numReservations);
-    printf("is th id correct y/n ");
-        char answer;
-        scanf(" %c", &answer);
-        if (answer == 'y'){break;}
-        if (answer=='n'){
-            printf("Please enter correct id\n");
-        }
-        else{
-            printf("Invalid input\n");
-        }}
-    
-    date today;
+        res = fopen("Room.txt","r");
+        if (res == NULL) {
+            printf("Could not open file\n");
+            menuOrExit();}
+            int lines2 = countlines(res); //lines in room
+            
+            Room *rooms = malloc(lines2*sizeof(Room)); //all rooms
+            LoadRooms(res,rooms);
+            fclose(res);
+            for(int i = 0 ; i < lines2;i++){
+                if(rooms[i].number == atoi(all[f].roomNum)){
+                    strcpy(all[f].RoomCategory,rooms[i].roomCategory);
+            }}
+
+    printReservation(&all[f]);
+   printf("Do you want to check in? (y/n): \n");
+  
+   while (1){
+   scanf(" %c",&c);
+    if (c!='y'&&c!='n'){
+        printf("Invalid input. Please enter y or n.\n");
+        continue;
+    }
+   if(c == 'y'){
+     date today;
     time_t t = time(NULL);
     struct tm tm = *localtime(&t);
     today.day = tm.tm_mday;
     today.month = tm.tm_mon + 1;
     today.year = tm.tm_year + 1900;
-printf("henaaaaaaaaaa");
-    int found = 0;
-    for (int x = 0; x < numReservations; x++) {
-            
-            if (today.year < reservations[x].checkinDate->year ||
-                (today.year == reservations[x].checkinDate->year && today.month < reservations[x].checkinDate->month) ||
-                (today.year == reservations[x].checkinDate->year && today.month == reservations[x].checkinDate->month && today.day < reservations[x].checkinDate->day)) {
+
+   splitDate(all[f].stringdate,all[f].checkinDate);
+    if (today.year < all[f].checkinDate->year ||
+                (today.year == all[f].checkinDate->year && today.month < all[f].checkinDate->month) ||
+                (today.year == all[f].checkinDate->year && today.month == all[f].checkinDate->month && today.day < all[f].checkinDate->day)) {
                 printf("Check-in not allowed before the check-in date.\n");
                 return;
             }
-
-            strcpy(reservations[i].reserveStatus, "Confirmed");
-
-            for (int j = 0; j < numRooms; j++) {
-                if (rooms[j].number == atoi(reservations[i].roomNum)) {
-                    strcpy(rooms[j].status, "Reserved");
-                    break;
-                }
-            }
-
-            printf("Reservation %s checked in successfully.\n", reservationID);
-             fptr = fopen("Reservation.txt","w");
-    if(fptr == NULL){return 0;}
-    for(int i = 0 ; i < numReservations;i++){
-             saveRes(fptr, &reservations[i]);}
-             fclose(fptr);
-                fptr = fopen("Room.txt","w");
-    if(fptr == NULL){return 0;}
-            saveRooms(fptr,rooms, numRooms);
-            return;
+    //update status to checked in
+    strncpy(all[f].reserveStatus, "confirmed", sizeof(all[f].reserveStatus));
+    all[f].reserveStatus[sizeof(all[f].reserveStatus)-1] = '\0';
+    res = fopen("Reservation.txt","w"); //reservation
+    if (res == NULL) {
+        printf("Could not open file\n");
+        return;
         }
+     //lines in reservation
+    
+    for(int i = 0 ;i<lines;i++){
+        writeCustomer(res,&all[i]);
+        if(i!=(lines-1)){
+            fprintf(res,"\n");
+        }
+
     }
- */
+    fclose(res);
+    printf("You have been checked in\n");
+    free(all);
+    menuOrExit();
+    }
+    if(c =='n'){
+        printf("You have not been checked in\n");
+        free(all);
+        menuOrExit();
+
+    }}
+ menuOrExit();
+ }
 
 //******cancel */
 void CancelReservation () {
@@ -606,7 +611,7 @@ load(r);
 void Checkout(){
 reservation r[256];
 int bills=1,j=0,count=0,index=-1,ROOMNI=0,total_bills=0,price=0,indexx=0,c1=0,c2=0;
-char ROOMN[5],c ='2';
+char ROOMN[5],c[2];
 
 reservation *fptr = &r[index];
   if (fptr == NULL) {printf("\033[1;31mError in opening reservation file.\033[0m");}
@@ -720,17 +725,19 @@ if (!(strcmp(ROOMN,r[index].roomNum))){
                    fclose(fptr);
 
               printf("\033[1;31mAre you sure you want to delete room %d record? Enter 'Y' for yes and 'N' for no.\033[0m\n",ROOMNI);
-                  scanf("%s",c);
+                  scanf("%c",c);
 
-                  if ((c=='n') || (c=='N')){firstmenuLogin();}
+                  if ( (strcmp(c,"N")==0) || (strcmp(c,"n")==0)){MainMenu();}
 
-                  else if((c=='y') || (c=='Y')){
+                  else if((strcmp(c,"Y")==0) || (strcmp(c,"y")==0)){
+
 
                    fptr=fopen("Room.txt","w");
                    if (fptr == NULL ){printf("Error in opening room text file.\n");}
                    else{
 
-                    saveRooms(fptr,room,count); //to write the rooms again into the file but with "Available"
+                    saveRooms(fptr,room,count);
+                    //to write the rooms again into the file but with "Available"
                    fclose(fptr);
 
                       fptr=fopen("Reservation.txt","r");
@@ -739,6 +746,7 @@ if (!(strcmp(ROOMN,r[index].roomNum))){
 
                             count = countlines(fptr);
                             fclose(fptr);
+                           
                        ////deleting records
 
                FILE *fptr1=fopen("Reservation.txt","w");
@@ -764,7 +772,6 @@ if (!(strcmp(ROOMN,r[index].roomNum))){
                 else {printf("\033[1;31mThis room is unconfirmed, cannot check out\033[0m\n");
                 Checkout();}}
                 else {printf("\033[1;31mRoom number is not found.\033[0m\n"); Checkout();}}}
-
 //******room availability */
 void RoomAvailability(){
     char search[256];
@@ -834,6 +841,7 @@ void details(){
         printf("Email: %s\n", r[index].email);
         printf("Mobile number: %s", r[index].mobileNum);
     }
+    menuOrExit();
 }
 
 //****change reservation details*/
@@ -872,12 +880,12 @@ printReservation(&all[f]);
         printf("New Details");
         
 printf("is the data correct if no u will be prompted to enter the data again \n");
-printf("y/n/m/e: ");
+printf("y/n/e: ");
 char finalconfirm;
 scanf(" %c",&finalconfirm);
-while(finalconfirm !='n'&&finalconfirm !='y'&&finalconfirm !='m'&&finalconfirm !='e'){
+while(finalconfirm !='n'&&finalconfirm !='y'&&finalconfirm !='e'){
     printf("Invalid choice\n");
-    printf("y/n/m/e: ");
+    printf("y/n/e: ");
     scanf(" %c",&finalconfirm);
 }
 if(finalconfirm == 'n'){
@@ -885,9 +893,7 @@ if(finalconfirm == 'n'){
     getchar();
     
 }
-if(finalconfirm == 'm'){
-   return;
-}
+
 if(finalconfirm == 'e'){
     exit(1);
 }
@@ -911,6 +917,7 @@ else if (finalconfirm == 'y'){
          }}
 
          fclose(res);
+         menuOrExit();
     }
 
  //****Query */
@@ -944,6 +951,7 @@ else if (finalconfirm == 'y'){
                 printf("\033[1;31mWrong entry, enter 1. 2 or 3:\033[0m ");
         }
     }
+    menuOrExit();
 }
 
 //*****report by date*/
@@ -973,7 +981,7 @@ void printbydate(){
         {
             char confirm;
             printf("Date you entered= %d/%d/%d\n",search.day,search.month,search.year);
-        printf("is it correct (yes =y,n = no enter date agin , m = return to main , e = close code): (y/n/m/e)");
+        printf("is it correct (yes =y,n = no enter date agin , e = close code): (y/n/e)");
             scanf(" %c",&confirm);
             //getchar();
             if(confirm == 'y'){
@@ -982,7 +990,7 @@ void printbydate(){
              break;}
                 //x =1;
                 
-                else if (confirm !='y' && confirm!='n'&& confirm!='m'&& confirm!='e'){
+                else if (confirm !='y' && confirm!='n'&& confirm!='e'){
                     printf("Invalid choice\n");
                     x =1;
                 continue;
@@ -992,10 +1000,7 @@ void printbydate(){
             break;
 
         }
-        else if(confirm == 'm'){
-            
-            return;
-        }
+        
         else if(confirm == 'e'){
             exit(1);
         }
@@ -1044,6 +1049,6 @@ void printbydate(){
             printf("No reservations found for the given date\n");
          }
    //getchar(); 
-return;
+menuOrExit();
 }
  
