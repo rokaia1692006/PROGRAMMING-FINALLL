@@ -39,7 +39,7 @@ void MainMenu() {
                 reserve();
                 break;
             case 2:
-                //checkIn();
+                //checkInGuest();
                 break;
             case 3:
                 CancelReservation();
@@ -69,6 +69,7 @@ void MainMenu() {
                 {printf("\033[1;31mInvalid choice. Please try again.\033[0m\n");
                 MainMenu();}
         }}
+
 //user identification
 int login(user *users, int user_count) {
 
@@ -93,6 +94,7 @@ int login(user *users, int user_count) {
     return 0;
 
 }
+
 //main calling
 int firstmenuLogin(){
 
@@ -148,44 +150,38 @@ int firstmenuLogin(){
 
 
 }
+
 //return to menu or exit
 void menuOrExit(){
     char search[256];
     int flag=1;
     while(flag){
-        printf("\033[1;34mEnter M to go back to main menu, and E to \033[1;34m\033[1;31mEXIT:\033[0m ");
-        gets(search);
+        printf("\033[1;34mEnter 1 to go back to main menu, and 2 to \033[1;34m\033[1;31mEXIT:\033[0m ");
+        scanf("%s", search);
         getchar();
-        while(!isalpha(search[0])||strlen(search)!=1){
-                printf("Wrong entry, enter M or E: ");
-                gets(search);
+        while(!isdigit(search[0])||strlen(search)!=1){
+                printf("\033[1;31mWrong entry, enter 1 or 2:\033[0m ");
+                scanf("%s", search);
             }
         switch(search[0]){
-            case 'M':
+            case '1':
                 MainMenu();
                 flag=0;
                 break;
-            case 'E':
+            case '2':
                 exit(1);
-                flag=0;
-                break;
-            case 'e':
-                exit(1);
-                flag=0;
-                break;
-            case 'm':
-                MainMenu();
                 flag=0;
                 break;
             default:
-                printf("Wrong entry, enter M or E: ");
+                printf("\033[1;31mWrong entry.\033[0m");
         }
     }
 }
+
 //******reserve room */
 void reserve(){
 //enter custumer data
-reservation* customer  = malloc(sizeof(customer)-1);
+reservation* customer  = malloc(sizeof(reservation)-1);
 while(1){
 enterData(customer);
 //print the reservation data
@@ -285,11 +281,12 @@ load(all);
 //generate random id
 
 randomID(randomcharacter,customer->reservationID,7);
+customer->reservationID[sizeof(customer->reservationID)-1]='\0';
 //validate random id
 while(validaterandomID(customer->reservationID,line,all)){
     printf("ID already exist\n");
     randomID(randomcharacter,customer->reservationID,7);
-
+customer->reservationID[sizeof(customer->reservationID)-1]='\0';
 }
 free(all);
 printf("Your Reservation ID is %s please remeber it for later use\n",customer->reservationID);
@@ -311,8 +308,89 @@ customer->reserveStatus[sizeof(customer->reserveStatus)-1] = '\0';
 writeCustomer(file,customer);
 
 free(rooms);
+menuOrExit();
 }
+
 //******check in */
+/* void checkInGuest() {
+    FILE* fptr = fopen("Reservation.txt","r");
+    if(fptr == NULL){
+        printf("Could not open file\n");
+        return;
+        }
+        int numReservations = countlines(fptr);
+    reservation *reservations = malloc(numReservations*sizeof(reservation));
+    
+    load(reservations);
+    fclose(fptr);
+
+
+        fptr = fopen("Room.txt","r");
+    if(fptr == NULL){
+        printf("Could not open file\n");
+        return;
+        }
+        int numRooms = countlines(fptr);
+    Room *rooms = malloc(numRooms*sizeof(rooms));
+    
+    LoadRooms(fptr,rooms);
+    fclose(fptr);
+   
+      //char reservationID [7];
+      int i ;
+      while(1){
+       i = findRoom_NumorID(reservations,numReservations);
+    printf("is th id correct y/n ");
+        char answer;
+        scanf(" %c", &answer);
+        if (answer == 'y'){break;}
+        if (answer=='n'){
+            printf("Please enter correct id\n");
+        }
+        else{
+            printf("Invalid input\n");
+        }}
+    
+    date today;
+    time_t t = time(NULL);
+    struct tm tm = *localtime(&t);
+    today.day = tm.tm_mday;
+    today.month = tm.tm_mon + 1;
+    today.year = tm.tm_year + 1900;
+printf("henaaaaaaaaaa");
+    int found = 0;
+    for (int x = 0; x < numReservations; x++) {
+            
+            if (today.year < reservations[x].checkinDate->year ||
+                (today.year == reservations[x].checkinDate->year && today.month < reservations[x].checkinDate->month) ||
+                (today.year == reservations[x].checkinDate->year && today.month == reservations[x].checkinDate->month && today.day < reservations[x].checkinDate->day)) {
+                printf("Check-in not allowed before the check-in date.\n");
+                return;
+            }
+
+            strcpy(reservations[i].reserveStatus, "Confirmed");
+
+            for (int j = 0; j < numRooms; j++) {
+                if (rooms[j].number == atoi(reservations[i].roomNum)) {
+                    strcpy(rooms[j].status, "Reserved");
+                    break;
+                }
+            }
+
+            printf("Reservation %s checked in successfully.\n", reservationID);
+             fptr = fopen("Reservation.txt","w");
+    if(fptr == NULL){return 0;}
+    for(int i = 0 ; i < numReservations;i++){
+             saveRes(fptr, &reservations[i]);}
+             fclose(fptr);
+                fptr = fopen("Room.txt","w");
+    if(fptr == NULL){return 0;}
+            saveRooms(fptr,rooms, numRooms);
+            return;
+        }
+    }
+ */
+
 //******cancel */
 void CancelReservation () {
 
@@ -368,8 +446,10 @@ load(r);
                     else{
                     LoadRooms(fptr,room);
                    fclose(fptr);
+                   char roomnum[5];
+                   sprintf(roomnum, "%d", ROOMNI);
 
-                   int indexx = findRoom(room,ROOMNI,count);
+                   int indexx = findRoom(room,roomnum,count);
                    if(strcmp(room[indexx].status,"Available")==0){printf("\033[1;31mRoom is already available, unable to cancel.\033[0m\n");
                    CancelReservation();}
                   else{strcpy(room[indexx].status,"Available");
@@ -470,7 +550,9 @@ load(r);
                     LoadRooms(fptr,room);
 
                    fclose(fptr);
-                   int indexx = findRoom(room,ROOMNI,count);
+                   char roomnum[5];
+                   sprintf(roomnum, "%d", ROOMNI);
+                   int indexx = findRoom(room,roomnum,count);
                    if(strcmp(room[indexx].status,"Available")==0){printf("\033[1;31mRoom is already available, unable to cancel.\033[0m\n");menuOrExit();}
                   else{strcpy(room[indexx].status,"Available");
 
@@ -570,7 +652,7 @@ if (!(strcmp(ROOMN,r[index].roomNum))){
             char date[50];
             strcpy(date,r[index].stringdate);
 
-            parseCheckinDate(&date, &r[index].checkinDate);
+            parseCheckinDate(date, r[index].checkinDate);
 
                 CheckInYear = r[index].checkinDate->year;
                 CheckInMonth = r[index].checkinDate->month;
@@ -626,7 +708,9 @@ if (!(strcmp(ROOMN,r[index].roomNum))){
                     Room *room = malloc(count*sizeof(Room));
                     LoadRooms(fptr,room);
                    fclose(fptr);
-                   int indexx = findRoom(room,ROOMNI,count);
+                   char roomnum[5];
+                   sprintf(roomnum, "%d", ROOMNI);
+                   int indexx = findRoom(room,roomnum,count);
 
                    strcpy(room[indexx].status,"Available");
                    bills=room[indexx].price;
@@ -638,9 +722,9 @@ if (!(strcmp(ROOMN,r[index].roomNum))){
               printf("\033[1;31mAre you sure you want to delete room %d record? Enter 'Y' for yes and 'N' for no.\033[0m\n",ROOMNI);
                   scanf("%s",c);
 
-                  if (strcmp(c,"n")==0 || strcmp(c,"N")==0){firstmenuLogin();}
+                  if ((c=='n') || (c=='N')){firstmenuLogin();}
 
-                  else if(strcmp(c,"Y")==0||strcmp(c,"y")==0){
+                  else if((c=='y') || (c=='Y')){
 
                    fptr=fopen("Room.txt","w");
                    if (fptr == NULL ){printf("Error in opening room text file.\n");}
@@ -674,7 +758,8 @@ if (!(strcmp(ROOMN,r[index].roomNum))){
 
             menuOrExit();
 
-        }}}}}}}
+        }}}}
+        else{MainMenu;}}}}
 
                 else {printf("\033[1;31mThis room is unconfirmed, cannot check out\033[0m\n");
                 Checkout();}}
@@ -702,6 +787,7 @@ void RoomAvailability(){
 
     menuOrExit();
 }
+
 //******details */
 void details(){
     int flag=1, index=-1, j=0;
@@ -749,6 +835,7 @@ void details(){
         printf("Mobile number: %s", r[index].mobileNum);
     }
 }
+
 //****change reservation details*/
 void changeReservation(){
    
@@ -825,6 +912,7 @@ else if (finalconfirm == 'y'){
 
          fclose(res);
     }
+
  //****Query */
  void query(){
     char search[256];
@@ -857,6 +945,7 @@ else if (finalconfirm == 'y'){
         }
     }
 }
+
 //*****report by date*/
 void printbydate(){
     int x = 1;
@@ -939,7 +1028,7 @@ void printbydate(){
     clearScreen();
     printf("\n");
     for(int i = 0; i < lines; i++){
-        splitDate(reservations[i].stringdate,&reservations[i].checkinDate);
+        splitDate(reservations[i].stringdate,reservations[i].checkinDate);
 
         if((search.day == reservations[i].checkinDate->day)&&(search.month == reservations[i].checkinDate->month)&&(search.year == reservations[i].checkinDate->year)){
         int room = findRoom(rooms,reservations[i].roomNum,roomlines);

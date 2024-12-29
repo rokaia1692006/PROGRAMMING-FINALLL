@@ -30,5 +30,5 @@ void loadRooms(FILE *file, Room *rooms);
 int countlines(FILE *file);
 void clearScreen(); 
 int findReservation(reservation *r, char NUM[], int count); // Corrected function declaration
-
+void checkInGuest() ;
 #endif // FUNCTIONS_H
